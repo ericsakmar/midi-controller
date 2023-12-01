@@ -12,7 +12,6 @@ from adafruit_midi.control_change import ControlChange
 #TODO import all midi messages
 from adafruit_debouncer import Debouncer
 
-
 # midi stuff
 midi_out_channel = 12
 midi_knob_cc = 100
@@ -20,12 +19,26 @@ midi_switch_cc = 101
 uart = busio.UART(board.TX, board.RX, baudrate=31250, timeout=0.001)
 midi = adafruit_midi.MIDI(midi_in=uart, midi_out=uart, out_channel=midi_out_channel)
 
-# pot stuff
-p0 = analogio.AnalogIn(board.A0)
-p0_last = 0
+class Knob:
+    def __init__(self, input, midi_control):
+        self.pin = analogio.AnalogIn(input)
+        self.last = 0
+        self.midi_control = midi_control
 
-p1 = analogio.AnalogIn(board.A1)
-p1_last = 0
+    def update(self):
+        value = self.pin.value
+        difference = math.fabs(value - self.last)
+
+        if difference > 258:
+            midi_value = int((value / 65535) * 127)
+            cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
+            print(cc)
+            midi.send(cc)
+            self.last = value
+
+# pot stuff
+knob1 = Knob(board.A0, 100)
+knob2 = Knob(board.A1, 101)
 
 # switch stuff
 pin = digitalio.DigitalInOut(board.D5)
@@ -56,21 +69,8 @@ while True:
         midi.send(msg) # add msg.channel?
 
     # knobs
-    sensor_value = p0.value
-    difference = math.fabs(sensor_value - p0_last)
-    if math.fabs(difference) > 258:
-        midi_value = int((sensor_value / 65535) * 127)
-        print("SENDING p0", midi_value)
-        cc = ControlChange(midi_knob_cc, midi_value, channel=midi_out_channel)
-        midi.send(cc)
-        p0_last = sensor_value
-
-    sensor_1_value = p1.value
-    d1 = math.fabs(sensor_1_value - p1_last)
-    if d1 > 258:
-        midi_value = int((sensor_1_value / 65535) * 127)
-        print("SENDING p1", midi_value)
-        p1_last = sensor_1_value
+    knob1.update()
+    knob2.update()
 
     # switches
     switch.update()
