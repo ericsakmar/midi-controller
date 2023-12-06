@@ -24,15 +24,30 @@ class Knob:
         self.midi_control = midi_control
 
     def update(self):
-        value = self.pin.value
-        difference = math.fabs(value - self.last)
+        midi_value = self.get_midi_value()
 
-        if difference > 258:
-            midi_value = int((value / 65535) * 127)
+        if self.should_update(midi_value):
             cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
             print(cc)
             midi.send(cc)
-            self.last = value
+            self.last = midi_value
+
+    def get_midi_value(self):
+        value = self.pin.value
+        midi_value = int((value / 65535) * 127)
+
+        # round up if close to one of the ends
+        if midi_value == 126:
+            return 127
+
+        if midi_value == 1:
+            return 0
+
+        return midi_value
+
+    def should_update(self, midi_value):
+        difference = math.fabs(midi_value - self.last)
+        return difference > 1
 
 class Switch:
     def __init__(self, input, led_pin, midi_control):
@@ -62,6 +77,10 @@ class Switch:
 # pot stuff
 knob1 = Knob(board.A0, 100)
 knob2 = Knob(board.A1, 101)
+knob3 = Knob(board.A2, 102)
+knob4 = Knob(board.A3, 103)
+knob5 = Knob(board.A4, 104)
+knob6 = Knob(board.A5, 105)
 
 # switch stuff
 switch1 = Switch(board.D5, board.D13, 106)
@@ -77,6 +96,10 @@ while True:
 
     knob1.update()
     knob2.update()
+    knob3.update()
+    knob4.update()
+    knob5.update()
+    knob6.update()
 
     switch1.update()
     switch2.update()
