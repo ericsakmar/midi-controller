@@ -7,10 +7,22 @@ import digitalio
 import adafruit_midi
 from adafruit_midi.midi_message import MIDIUnknownEvent
 from adafruit_midi.stop import Stop
+from adafruit_debouncer import Debouncer
+
+# importing all messages for the midi thru
+from adafruit_midi.note_on import NoteOn
+from adafruit_midi.note_off import NoteOff
+from adafruit_midi.pitch_bend import PitchBend
+from adafruit_midi.channel_pressure import ChannelPressure
+from adafruit_midi.midi_continue import Continue
+from adafruit_midi.mtc_quarter_frame import MtcQuarterFrame
+from adafruit_midi.polyphonic_key_pressure import PolyphonicKeyPressure
+from adafruit_midi.program_change import ProgramChange
+from adafruit_midi.start import Start
+from adafruit_midi.stop import Stop
+from adafruit_midi.system_exclusive import SystemExclusive
 from adafruit_midi.timing_clock import TimingClock
 from adafruit_midi.control_change import ControlChange
-#TODO import all midi messages
-from adafruit_debouncer import Debouncer
 
 # midi stuff
 midi_out_channel = 12
@@ -28,7 +40,7 @@ class Knob:
 
         if self.should_update(midi_value):
             cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
-            print(cc)
+            # print(cc)
             midi.send(cc)
             self.last = midi_value
 
@@ -71,7 +83,7 @@ class Switch:
             self.led.value = self.switch_on
             midi_value = 127 if self.switch_on else 0
             cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
-            print(cc)
+            # print(cc)
             midi.send(cc)
 
 # pot stuff
