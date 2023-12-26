@@ -2,8 +2,7 @@
 
 A stompbox-inspired MIDI controller for the HX Stomp.
 
-![photo of midi controller](https://github.com/ericsakmar/midi-controller/blob/7463dfbe03e78f3c5665ea039e8b23a9f26f1299/photos/01.jpg)
-![photo of midi controller connected to hx stomp](https://github.com/ericsakmar/midi-controller/blob/7463dfbe03e78f3c5665ea039e8b23a9f26f1299/photos/02.jpg)
+![photo of midi controller connected to hx stomp](photos/02.jpg)
 
 Features include:
 
