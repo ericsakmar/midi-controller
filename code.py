@@ -93,7 +93,7 @@ class Switch:
     def send_midi(self):
         midi_value = 127 if self.switch_on else 0
         cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
-        print(cc)
+        # print(cc)
         midi.send(cc)
 
     def heartbeat(self):
