@@ -39,9 +39,7 @@ class Knob:
         midi_value = self.get_midi_value()
 
         if self.should_update(midi_value):
-            cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
-            # print(cc)
-            midi.send(cc)
+            self.send_midi(midi_value)
             self.last = midi_value
 
     def get_midi_value(self):
@@ -60,6 +58,15 @@ class Knob:
     def should_update(self, midi_value):
         difference = math.fabs(midi_value - self.last)
         return difference > 1
+
+    def heartbeat(self):
+        midi_value = self.get_midi_value()
+        self.send_midi(midi_value)
+
+    def send_midi(self, midi_value):
+        cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
+        # print(cc)
+        midi.send(cc)
 
 class Switch:
     def __init__(self, input, led_pin, midi_control):
@@ -81,10 +88,16 @@ class Switch:
         if self.switch.fell:
             self.switch_on = not self.switch_on
             self.led.value = self.switch_on
-            midi_value = 127 if self.switch_on else 0
-            cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
-            # print(cc)
-            midi.send(cc)
+            self.send_midi()
+
+    def send_midi(self):
+        midi_value = 127 if self.switch_on else 0
+        cc = ControlChange(self.midi_control, midi_value, channel=midi_out_channel)
+        print(cc)
+        midi.send(cc)
+
+    def heartbeat(self):
+        self.send_midi()
 
 # pot stuff
 knob1 = Knob(board.A0, 100)
@@ -98,13 +111,27 @@ knob6 = Knob(board.A5, 105)
 switch1 = Switch(board.D5, board.D13, 106)
 switch2 = Switch(board.D6, board.D12, 107)
 
+# keeps things in sync
+def update_all():
+    knob1.heartbeat()
+    knob2.heartbeat()
+    knob3.heartbeat()
+    knob4.heartbeat()
+    knob5.heartbeat()
+    knob6.heartbeat()
+
+    switch1.heartbeat()
+    switch2.heartbeat()
+
+update_all()
+last_update = time.monotonic()
+
 # Main loop
 while True:
     # midi thru
     msg = midi.receive()
     if msg is not None and not isinstance(msg, MIDIUnknownEvent):
-        # print("MIDI Message received:", msg)
-        midi.send(msg) # add msg.channel?
+        midi.send(msg, msg.channel)
 
     knob1.update()
     knob2.update()
@@ -116,4 +143,7 @@ while True:
     switch1.update()
     switch2.update()
 
-    # time.sleep(1)
+    now = time.monotonic()
+    if now - last_update > 20:
+        update_all()
+        last_update = now
